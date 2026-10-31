@@ -1,9 +1,16 @@
 export type Estado = 'Abierto' | 'En seguimiento' | 'Cerrado'
 export type Categoria = '' | 'Civil' | 'Familiar' | 'Laboral'
 
+export interface Actividad {
+  id: string
+  descripcion: string
+  fecha: string
+  tipo?: string
+}
+
 export interface EntradaHistorial {
   id: string
-  tipo: 'estado' | 'actividad'
+  tipo: 'apertura' | 'estado' | 'actividad'
   fecha: string // ISO
   detalle: string
   tipoActividad?: string

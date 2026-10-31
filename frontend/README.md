@@ -1,32 +1,30 @@
-# React + TypeScript + Vite
+# Bufete Popular · Expedientes
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicación React para registrar y consultar expedientes ficticios. Incluye
+listado con búsqueda y filtro, apertura de expedientes, detalle, registro de
+actividades, cambios de estado, cierre y un historial unificado.
 
-Currently, two official plugins are available:
+## Base de datos simulada
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+`src/data/api.json` contiene los datos ficticios iniciales de la aplicación.
+Al abrirla por primera vez, el listado lee esos expedientes; los cambios
+posteriores se guardan en `localStorage` del navegador bajo la clave
+`expedientes`. Es una simulación local, no un servidor API ni una base de datos
+compartida entre usuarios.
 
-## React Compiler
+Para volver a cargar los datos iniciales, borra la clave `expedientes` del
+almacenamiento local del sitio desde las herramientas del navegador.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Desarrollo
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Comprobaciones disponibles:
+
+```sh
+npm run build
+npm run lint
+```
