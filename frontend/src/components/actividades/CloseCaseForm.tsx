@@ -4,7 +4,7 @@ import { LockKeyhole, XCircle } from "lucide-react";
 interface CloseCaseFormProps {
   estado: string;
   totalActividades: number;
-  onClose: (motivo: string, fecha: string) => void;
+  onClose: (motivo: string, fecha: string) => boolean;
 }
 
 export default function CloseCaseForm({
@@ -48,7 +48,9 @@ export default function CloseCaseForm({
       return;
     }
 
-    onClose(texto, new Date().toISOString());
+    if (!onClose(texto, new Date().toISOString())) {
+      return;
+    }
 
     setMotivo("");
     setConfirmar(false);

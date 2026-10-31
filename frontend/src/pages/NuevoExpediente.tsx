@@ -34,7 +34,7 @@ type FormDatos = z.infer<typeof esquema>;
 
 export default function NuevoExpediente() {
   const [exito, setExito] = useState<string | null>(null);
-  const [errorGeneral, setErrorGeneral] = useState(false);
+  const [errorGeneral, setErrorGeneral] = useState("");
 
   const {
     register,
@@ -52,17 +52,24 @@ export default function NuevoExpediente() {
   });
 
   const onSubmit = (datos: FormDatos) => {
-    const exp = crearExpediente(datos);
-    setErrorGeneral(false);
-    setExito(
-      `Expediente ${exp.id} abierto correctamente — ${formatearFecha(exp.fechaApertura)}`,
-    );
-    reset();
+    try {
+      const exp = crearExpediente(datos);
+      setErrorGeneral("");
+      setExito(
+        `Expediente ${exp.id} abierto correctamente — ${formatearFecha(exp.fechaApertura)}`,
+      );
+      reset();
+    } catch (error) {
+      setExito(null);
+      setErrorGeneral(
+        error instanceof Error ? error.message : "No se pudo guardar el expediente.",
+      );
+    }
   };
 
   const onError = () => {
     setExito(null);
-    setErrorGeneral(true);
+    setErrorGeneral("Corrija los campos marcados en rojo.");
   };
 
   const inputBase =
@@ -83,7 +90,7 @@ export default function NuevoExpediente() {
       {errorGeneral && (
         <div className="mb-4 flex items-start gap-2 rounded-md border border-red-400 bg-red-50 p-3 text-sm text-red-700">
           <AlertCircle size={18} className="mt-0.5 shrink-0" />
-          No se pudo abrir el expediente. Corrija los campos marcados en rojo.
+          {errorGeneral}
         </div>
       )}
 
