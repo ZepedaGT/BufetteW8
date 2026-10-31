@@ -7,6 +7,14 @@ export interface EntradaHistorial {
   fecha: string // ISO
   detalle: string
   tipoActividad?: string
+  estadoAnterior?: Estado // solo en cambios de estado
+  estadoNuevo?: Estado
+  motivo?: string // cierre o reapertura
+}
+
+export interface Cierre {
+  fecha: string // ISO
+  motivo: string
 }
 
 export interface Expediente {
@@ -17,7 +25,10 @@ export interface Expediente {
   categoria: Categoria
   fechaApertura: string // ISO
   estado: Estado
-  motivoCierre?: string
-  fechaCierre?: string
+  cierres: Cierre[] // todos los cierres; nunca se reemplazan
   historial: EntradaHistorial[]
 }
+
+export type Resultado =
+  | { ok: true; expediente: Expediente; mensaje: string }
+  | { ok: false; mensaje: string }
