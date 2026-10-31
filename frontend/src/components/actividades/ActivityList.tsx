@@ -1,8 +1,8 @@
 import { ClipboardList, Clock3 } from "lucide-react";
-import type { Activity } from "./ActivityForm";
+import type { Actividad } from "../../types/expediente";
 
 interface ActivityListProps {
-  actividades: Activity[];
+  actividades: Actividad[];
 }
 
 function formatDate(fecha: string) {

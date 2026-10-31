@@ -1,16 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Plus, ClipboardList } from "lucide-react";
-
-export interface Activity {
-  id: string;
-  descripcion: string;
-  fecha: string;
-  tipo?: string;
-}
+import type { Actividad } from "../../types/expediente";
 
 interface ActivityFormProps {
   estado: string;
-  onAddActivity: (actividad: Activity) => void;
+  onAddActivity: (actividad: Actividad) => boolean;
 }
 
 export default function ActivityForm({
@@ -37,14 +31,16 @@ export default function ActivityForm({
       return;
     }
 
-    const actividad: Activity = {
+    const actividad: Actividad = {
       id: crypto.randomUUID(),
       descripcion: texto,
       fecha: new Date().toISOString(),
       tipo: "Actividad",
     };
 
-    onAddActivity(actividad);
+    if (!onAddActivity(actividad)) {
+      return;
+    }
 
     setDescripcion("");
     setError("");

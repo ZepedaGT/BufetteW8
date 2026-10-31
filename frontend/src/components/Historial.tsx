@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { FolderOpen, MessageSquare, ArrowRightLeft, RotateCcw } from "lucide-react";
+=======
+import { FolderOpen, MessageSquare, ArrowRightLeft } from "lucide-react";
+import { formatearFecha } from "../lib/storage";
+>>>>>>> 3d0fccf4cb6cc83e4b21665e3c2f3334485dd1fb
 import type { Expediente } from "../types/expediente";
 
 export type Cierre = { fecha: string; motivo?: string };
@@ -11,6 +16,7 @@ type Evento = {
   detalle?: string;
 };
 
+<<<<<<< HEAD
 export const formatearFecha = (f: string) =>
   new Date(f).toLocaleString("es-GT", { dateStyle: "medium", timeStyle: "short" });
 
@@ -52,6 +58,18 @@ function construirHistorial(e: Expediente): Evento[] {
     }),
   ];
   return eventos.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+=======
+function construirHistorial(e: Expediente): Evento[] {
+  return e.historial
+    .map((entrada) => ({
+      id: entrada.id,
+      tipo: entrada.tipo,
+      fecha: entrada.fecha,
+      texto: entrada.detalle,
+      detalle: entrada.tipoActividad,
+    }))
+    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+>>>>>>> 3d0fccf4cb6cc83e4b21665e3c2f3334485dd1fb
 }
 
 const estilos = {
