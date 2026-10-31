@@ -1,48 +1,57 @@
-import { useState } from 'react'
-import { cerrarExpediente } from '../lib/storage'
-import type { Estado } from '../types/expediente'
+import { useState } from "react";
+import CloseCaseForm from "./actividades/CloseCaseForm";
+import { cerrarExpediente } from "../lib/storage";
+import type { Estado } from "../types/expediente";
 
 interface Props {
-  id: string
-  estado: Estado
-  onCambio: () => void
+  id: string;
+  estado: Estado;
+  totalActividades: number;
+  onCambio: () => void;
 }
 
-export default function CerrarExpediente({ id, estado, onCambio }: Props) {
-  const [motivo, setMotivo] = useState('')
-  const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null)
+export default function CerrarExpediente({
+  id,
+  estado,
+  totalActividades,
+  onCambio,
+}: Props) {
+  const [error, setError] = useState("");
 
-  if (estado !== 'En seguimiento') return null
+  if (estado !== "En seguimiento") return null;
 
-  const enviar = () => {
-    const r = cerrarExpediente(id, motivo)
-    setMensaje({ ok: r.ok, texto: r.mensaje })
-    if (r.ok) {
-      setMotivo('')
-      onCambio()
+  function cerrar(motivo: string): boolean {
+    try {
+      const resultado = cerrarExpediente(id, motivo);
+      if (!resultado.ok) {
+        setError(resultado.mensaje);
+        return false;
+      }
+      setError("");
+      onCambio();
+      return true;
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo cerrar el expediente.",
+      );
+      return false;
     }
   }
 
   return (
-    <div className="space-y-2 rounded border p-4">
-      <label htmlFor="motivo-cierre" className="block text-sm font-medium">
-        Motivo de cierre (obligatorio)
-      </label>
-      <textarea
-        id="motivo-cierre"
-        value={motivo}
-        onChange={(e) => setMotivo(e.target.value)}
-        rows={3}
-        className="w-full rounded border p-2"
-      />
-      <button onClick={enviar} className="rounded bg-red-600 px-4 py-2 text-white">
-        Cerrar expediente
-      </button>
-      {mensaje && (
-        <p role="alert" className={mensaje.ok ? 'text-green-700' : 'text-red-700'}>
-          {mensaje.texto}
+    <div>
+      {error && (
+        <p role="alert" className="mb-3 rounded bg-red-50 p-3 text-sm text-red-700">
+          {error}
         </p>
       )}
+      <CloseCaseForm
+        estado={estado}
+        totalActividades={totalActividades}
+        onClose={cerrar}
+      />
     </div>
-  )
+  );
 }

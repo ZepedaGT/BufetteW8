@@ -8,6 +8,7 @@
       "categoria": "Civil",
       "fechaApertura": "2026-10-10T09:00:00.000Z",
       "estado": "En seguimiento",
+      "cierres": [],
       "historial": [
         {
           "id": "exp-0001-apertura",
@@ -26,7 +27,9 @@
           "id": "exp-0001-estado-1",
           "tipo": "estado",
           "fecha": "2026-10-13T10:15:00.000Z",
-          "detalle": "Estado cambiado: Abierto → En seguimiento"
+          "detalle": "Estado cambiado: Abierto → En seguimiento",
+          "estadoAnterior": "Abierto",
+          "estadoNuevo": "En seguimiento"
         }
       ]
     },
@@ -38,6 +41,7 @@
       "categoria": "Familiar",
       "fechaApertura": "2026-10-20T14:00:00.000Z",
       "estado": "Abierto",
+      "cierres": [],
       "historial": [
         {
           "id": "exp-0002-apertura",
@@ -55,8 +59,12 @@
       "categoria": "Laboral",
       "fechaApertura": "2026-09-02T08:30:00.000Z",
       "estado": "Cerrado",
-      "motivoCierre": "El caso se resolvió mediante un acuerdo entre las partes.",
-      "fechaCierre": "2026-09-18T16:45:00.000Z",
+      "cierres": [
+        {
+          "fecha": "2026-09-18T16:45:00.000Z",
+          "motivo": "El caso se resolvió mediante un acuerdo entre las partes."
+        }
+      ],
       "historial": [
         {
           "id": "exp-0003-apertura",
@@ -75,7 +83,9 @@
           "id": "exp-0003-estado-1",
           "tipo": "estado",
           "fecha": "2026-09-08T09:20:00.000Z",
-          "detalle": "Estado cambiado: Abierto → En seguimiento"
+          "detalle": "Estado cambiado: Abierto → En seguimiento",
+          "estadoAnterior": "Abierto",
+          "estadoNuevo": "En seguimiento"
         },
         {
           "id": "exp-0003-actividad-2",
@@ -88,7 +98,10 @@
           "id": "exp-0003-cierre",
           "tipo": "estado",
           "fecha": "2026-09-18T16:45:00.000Z",
-          "detalle": "Expediente cerrado. Motivo: El caso se resolvió mediante un acuerdo entre las partes."
+          "detalle": "Expediente cerrado. Motivo: El caso se resolvió mediante un acuerdo entre las partes.",
+          "estadoAnterior": "En seguimiento",
+          "estadoNuevo": "Cerrado",
+          "motivo": "El caso se resolvió mediante un acuerdo entre las partes."
         }
       ]
     }

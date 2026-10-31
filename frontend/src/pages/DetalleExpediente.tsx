@@ -1,58 +1,67 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import CerrarExpediente from "../components/CerrarExpediente";
+import EstadoBadge from "../components/EstadoBadge";
+import Historial from "../components/Historial";
 import ActivityForm from "../components/actividades/ActivityForm";
 import ActivityList from "../components/actividades/ActivityList";
 import ChangeStatusButton from "../components/actividades/ChangeStatusButton";
-import CloseCaseForm from "../components/actividades/CloseCaseForm";
+import ReabrirExpediente from "../components/ReabrirExpediente";
 import {
-  cambiarEstado,
-  cerrarExpediente,
+  agregarActividad,
+  formatearFecha,
   obtenerActividades,
   obtenerExpediente,
-  registrarActividad,
-  formatearFecha,
+  pasarASeguimiento,
 } from "../lib/storage";
-import type { Actividad, Expediente } from "../types/expediente";
-import EstadoBadge from "../components/EstadoBadge";
-<<<<<<< HEAD
-import Historial, { formatearFecha, obtenerCierres } from "../components/Historial";
-=======
-import Historial from "../components/Historial";
->>>>>>> 3d0fccf4cb6cc83e4b21665e3c2f3334485dd1fb
+import type { Actividad, Resultado } from "../types/expediente";
 
 export default function DetalleExpediente() {
   const { id } = useParams();
   const [, actualizarVista] = useState(0);
-  const expediente = id ? obtenerExpediente(id) : undefined;
   const [error, setError] = useState("");
+  const expediente = id ? obtenerExpediente(id) : undefined;
+  const actividades = expediente ? obtenerActividades(expediente) : [];
 
-  function ejecutarAccion(accion: () => Expediente): boolean {
+  function ejecutarAccion(accion: () => Resultado): boolean {
     try {
-      accion();
+      const resultado = accion();
+      if (!resultado.ok) {
+        setError(resultado.mensaje);
+        return false;
+      }
       actualizarVista((valor) => valor + 1);
       setError("");
       return true;
     } catch (error) {
-      setError(error instanceof Error ? error.message : "No se pudo actualizar el expediente.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el expediente.",
+      );
       return false;
     }
   }
 
-  function agregarActividad(actividad: Actividad): boolean {
-    if (id) {
-      return ejecutarAccion(() => registrarActividad(id, actividad));
-    }
-    return false;
+  function agregarUnaActividad(actividad: Actividad): boolean {
+    return id
+      ? ejecutarAccion(() =>
+          agregarActividad(id, actividad.descripcion, actividad.tipo),
+        )
+      : false;
   }
-
-  const actividades = expediente ? obtenerActividades(expediente) : [];
 
   if (!expediente) {
     return (
       <div className="mx-auto max-w-3xl p-4">
-        <p className="rounded bg-red-50 p-6 text-red-700">Expediente no encontrado.</p>
-        <Link to="/" className="mt-4 inline-flex items-center gap-1 text-blue-600 hover:underline">
+        <p className="rounded bg-red-50 p-6 text-red-700">
+          Expediente no encontrado.
+        </p>
+        <Link
+          to="/"
+          className="mt-4 inline-flex items-center gap-1 text-blue-600 hover:underline"
+        >
           <ArrowLeft className="h-4 w-4" /> Volver al listado
         </Link>
       </div>
@@ -65,11 +74,13 @@ export default function DetalleExpediente() {
       <dd>{valor || "—"}</dd>
     </div>
   );
-     const cierres = obtenerCierres(expediente);
 
   return (
     <div className="mx-auto max-w-3xl p-4">
-      <Link to="/" className="mb-4 inline-flex items-center gap-1 text-blue-600 hover:underline">
+      <Link
+        to="/"
+        className="mb-4 inline-flex items-center gap-1 text-blue-600 hover:underline"
+      >
         <ArrowLeft className="h-4 w-4" /> Volver al listado
       </Link>
 
@@ -83,26 +94,37 @@ export default function DetalleExpediente() {
         {dato("Responsable", expediente.responsable)}
         {dato("Categoría", expediente.categoria)}
         {dato("Fecha de apertura", formatearFecha(expediente.fechaApertura))}
-        <div className="sm:col-span-2">{dato("Descripción", expediente.descripcion)}</div>
-        {cierres.length > 0 && (
-  <>
-    <h2 className="mb-3 text-lg font-semibold">Cierres ({cierres.length})</h2>
-    <ul className="mb-6 space-y-2">
-      {cierres.map((c, i) => (
-        <li key={i} className="rounded border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">
-            Cierre {i + 1} · {formatearFecha(c.fecha)}
-          </p>
-          <p>{c.motivo || "—"}</p>
-        </li>
-      ))}
-    </ul>
-  </>
-)}
+        <div className="sm:col-span-2">
+          {dato("Descripción", expediente.descripcion)}
+        </div>
       </dl>
 
+      {expediente.cierres.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-3 text-lg font-semibold">
+            Historial de cierres ({expediente.cierres.length})
+          </h2>
+          <ul className="space-y-2">
+            {expediente.cierres.map((cierre, indice) => (
+              <li
+                key={`${cierre.fecha}-${indice}`}
+                className="rounded border border-gray-200 p-3"
+              >
+                <p className="text-xs text-gray-500">
+                  Cierre {indice + 1} · {formatearFecha(cierre.fecha)}
+                </p>
+                <p>{cierre.motivo || "Motivo no disponible"}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {error && (
-        <p role="alert" className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+        <p
+          role="alert"
+          className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
         </p>
       )}
@@ -111,17 +133,23 @@ export default function DetalleExpediente() {
         <ChangeStatusButton
           estado={expediente.estado}
           onChangeStatus={() => {
-            if (id) ejecutarAccion(() => cambiarEstado(id));
+            if (id) ejecutarAccion(() => pasarASeguimiento(id));
           }}
         />
-        <ActivityForm estado={expediente.estado} onAddActivity={agregarActividad} />
-        <CloseCaseForm
+        <ActivityForm
+          estado={expediente.estado}
+          onAddActivity={agregarUnaActividad}
+        />
+        <CerrarExpediente
+          id={expediente.id}
           estado={expediente.estado}
           totalActividades={actividades.length}
-          onClose={(motivo, fecha) => {
-            if (id) return ejecutarAccion(() => cerrarExpediente(id, motivo, fecha));
-            return false;
-          }}
+          onCambio={() => actualizarVista((valor) => valor + 1)}
+        />
+        <ReabrirExpediente
+          id={expediente.id}
+          estado={expediente.estado}
+          onCambio={() => actualizarVista((valor) => valor + 1)}
         />
       </div>
 

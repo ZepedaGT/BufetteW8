@@ -14,13 +14,19 @@ export default function ReabrirExpediente({ id, estado, onCambio }: Props) {
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null)
 
   const enviar = () => {
-    // No se valida aquí: storage.ts decide y devuelve el mensaje
-    const r = reabrirExpediente(id, motivo)
-    setMensaje({ ok: r.ok, texto: r.mensaje })
-    if (r.ok) {
-      setMotivo('')
-      setAbierto(false)
-      onCambio()
+    try {
+      const resultado = reabrirExpediente(id, motivo)
+      setMensaje({ ok: resultado.ok, texto: resultado.mensaje })
+      if (resultado.ok) {
+        setMotivo('')
+        setAbierto(false)
+        onCambio()
+      }
+    } catch (error) {
+      setMensaje({
+        ok: false,
+        texto: error instanceof Error ? error.message : 'No se pudo reabrir el expediente.',
+      })
     }
   }
 
@@ -34,6 +40,7 @@ export default function ReabrirExpediente({ id, estado, onCambio }: Props) {
     <div className="space-y-3">
       {estado === 'Cerrado' && !abierto && (
         <button
+          type="button"
           onClick={() => {
             setAbierto(true)
             setMensaje(null)
@@ -57,10 +64,10 @@ export default function ReabrirExpediente({ id, estado, onCambio }: Props) {
             className="w-full rounded border p-2"
           />
           <div className="flex gap-2">
-            <button onClick={enviar} className="rounded bg-blue-600 px-4 py-2 text-white">
+            <button type="button" onClick={enviar} className="rounded bg-blue-600 px-4 py-2 text-white">
               Confirmar reapertura
             </button>
-            <button onClick={cancelar} className="rounded border px-4 py-2">
+            <button type="button" onClick={cancelar} className="rounded border px-4 py-2">
               Cancelar
             </button>
           </div>
