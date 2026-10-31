@@ -1,13 +1,29 @@
-import baseDatos from '../data/api.json'
-import type { Actividad, Categoria, Estado, Expediente } from '../types/expediente'
+import type { Categoria, Cierre, EntradaHistorial, Estado, Expediente, Resultado } from '../types/expediente'
 
 const CLAVE = 'expedientes'
 
+// Datos guardados antes del cambio (podían tener motivoCierre/fechaCierre)
+type ExpedienteGuardado = Omit<Expediente, 'cierres'> & {
+  cierres?: Cierre[]
+  motivoCierre?: string
+  fechaCierre?: string
+}
+
+function normalizar(e: ExpedienteGuardado): Expediente {
+  const cierres: Cierre[] =
+    e.cierres ??
+    (e.motivoCierre && e.fechaCierre ? [{ fecha: e.fechaCierre, motivo: e.motivoCierre }] : [])
+  return { ...e, cierres }
+}
+
+// ===== Lectura y escritura =====
 export function obtenerExpedientes(): Expediente[] {
-  const guardados = localStorage.getItem(CLAVE)
-  return guardados === null
-    ? (baseDatos.expedientes as Expediente[])
-    : (JSON.parse(guardados) as Expediente[])
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE) ?? '[]') as ExpedienteGuardado[]
+    return datos.map(normalizar)
+  } catch {
+    return []
+  }
 }
 
 export function guardarExpedientes(lista: Expediente[]): void {
@@ -19,27 +35,10 @@ export function obtenerExpediente(id: string): Expediente | undefined {
 }
 
 export function actualizarExpediente(exp: Expediente): void {
-  if (!obtenerExpedientes().some((e) => e.id === exp.id)) {
-    throw new Error(`No existe el expediente ${exp.id}.`)
-  }
-  const lista = obtenerExpedientes().map((e) => (e.id === exp.id ? exp : e))
-  guardarExpedientes(lista)
+  guardarExpedientes(obtenerExpedientes().map((e) => (e.id === exp.id ? exp : e)))
 }
 
-function actualizarPorId(
-  id: string,
-  actualizar: (expediente: Expediente) => Expediente,
-): Expediente {
-  const expediente = obtenerExpediente(id)
-  if (!expediente) {
-    throw new Error(`No existe el expediente ${id}.`)
-  }
-  const actualizado = actualizar(expediente)
-  actualizarExpediente(actualizado)
-  return actualizado
-}
-
-// ID legible y único: EXP-0001, EXP-0002...
+// ===== Utilidades =====
 export function generarId(): string {
   const mayor = obtenerExpedientes().reduce((max, e) => {
     const n = parseInt(e.id.replace('EXP-', ''), 10)
@@ -52,6 +51,31 @@ export function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString('es-GT')
 }
 
+const estaVacio = (texto: string | undefined) => !texto || texto.trim() === ''
+
+function nuevaEntrada(
+  tipo: EntradaHistorial['tipo'],
+  detalle: string,
+  extra: Partial<EntradaHistorial> = {},
+): EntradaHistorial {
+  return { id: crypto.randomUUID(), tipo, fecha: new Date().toISOString(), detalle, ...extra }
+}
+
+function entradaEstado(de: Estado | undefined, a: Estado, detalle: string, motivo?: string): EntradaHistorial {
+  return nuevaEntrada('estado', detalle, { estadoAnterior: de, estadoNuevo: a, motivo })
+}
+
+function error(mensaje: string): Resultado {
+  return { ok: false, mensaje }
+}
+
+function guardarYResponder(exp: Expediente, mensaje: string): Resultado {
+  actualizarExpediente(exp)
+  return { ok: true, expediente: exp, mensaje }
+}
+
+// ===== Operaciones (las reglas viven aquí, no solo en la interfaz) =====
+
 interface NuevoExpediente {
   alias: string
   descripcion: string
@@ -60,110 +84,95 @@ interface NuevoExpediente {
 }
 
 export function crearExpediente(datos: NuevoExpediente): Expediente {
-  const ahora = new Date().toISOString()
   const exp: Expediente = {
     id: generarId(),
-    ...datos,
-    fechaApertura: ahora,
+    alias: datos.alias.trim(),
+    descripcion: datos.descripcion.trim(),
+    responsable: datos.responsable.trim(),
+    categoria: datos.categoria,
+    fechaApertura: new Date().toISOString(),
     estado: 'Abierto',
-    historial: [
-      {
-        id: 'apertura',
-        tipo: 'apertura',
-        fecha: ahora,
-        detalle: 'Expediente abierto',
-      },
-    ],
+    cierres: [],
+    historial: [entradaEstado(undefined, 'Abierto', 'Expediente abierto (estado inicial: Abierto)')],
   }
   guardarExpedientes([...obtenerExpedientes(), exp])
   return exp
 }
 
-export function obtenerActividades(expediente: Expediente): Actividad[] {
-  return expediente.historial
-    .filter((entrada) => entrada.tipo === 'actividad')
-    .map((entrada) => ({
-      id: entrada.id,
-      descripcion: entrada.detalle,
-      fecha: entrada.fecha,
-      tipo: entrada.tipoActividad,
-    }))
+export function agregarActividad(id: string, descripcion: string, tipoActividad?: string): Resultado {
+  const exp = obtenerExpediente(id)
+  if (!exp) return error('El expediente no existe.')
+  if (exp.estado === 'Cerrado')
+    return error('El expediente está cerrado y no admite nuevas actividades. Reábralo primero.')
+  if (estaVacio(descripcion))
+    return error('Ingrese la descripción de la actividad (no puede estar vacía ni tener solo espacios).')
+
+  const actualizado: Expediente = {
+    ...exp,
+    historial: [
+      ...exp.historial,
+      nuevaEntrada('actividad', descripcion.trim(), {
+        tipoActividad: estaVacio(tipoActividad) ? undefined : tipoActividad!.trim(),
+      }),
+    ],
+  }
+  return guardarYResponder(actualizado, 'Actividad registrada correctamente.')
 }
 
-export function registrarActividad(id: string, actividad: Actividad): Expediente {
-  return actualizarPorId(id, (expediente) => {
-    if (expediente.estado === 'Cerrado') {
-      throw new Error('No puedes agregar actividades a un expediente cerrado.')
-    }
-    return {
-      ...expediente,
-      historial: [
-        ...expediente.historial,
-        {
-          id: actividad.id,
-          tipo: 'actividad',
-          fecha: actividad.fecha,
-          detalle: actividad.descripcion,
-          tipoActividad: actividad.tipo,
-        },
-      ],
-    }
-  })
+export function pasarASeguimiento(id: string): Resultado {
+  const exp = obtenerExpediente(id)
+  if (!exp) return error('El expediente no existe.')
+  if (exp.estado !== 'Abierto')
+    return error(`Solo un expediente Abierto puede pasar a En seguimiento (estado actual: ${exp.estado}).`)
+
+  const actualizado: Expediente = {
+    ...exp,
+    estado: 'En seguimiento',
+    historial: [...exp.historial, entradaEstado('Abierto', 'En seguimiento', 'Cambio de estado: Abierto → En seguimiento')],
+  }
+  return guardarYResponder(actualizado, 'El expediente pasó a En seguimiento.')
 }
 
-export function cambiarEstado(id: string): Expediente {
-  return actualizarPorId(id, (expediente) => {
-    if (expediente.estado !== 'Abierto') {
-      throw new Error('Solo se puede pasar a seguimiento un expediente abierto.')
-    }
-    const estadoAnterior: Estado = expediente.estado
-    const fecha = new Date().toISOString()
-    return {
-      ...expediente,
-      estado: 'En seguimiento',
-      historial: [
-        ...expediente.historial,
-        {
-          id: crypto.randomUUID(),
-          tipo: 'estado',
-          fecha,
-          detalle: `Estado cambiado: ${estadoAnterior} → En seguimiento`,
-        },
-      ],
-    }
-  })
+export function cerrarExpediente(id: string, motivo: string): Resultado {
+  const exp = obtenerExpediente(id)
+  if (!exp) return error('El expediente no existe.')
+  if (exp.estado !== 'En seguimiento')
+    return error(`Solo se puede cerrar un expediente En seguimiento (estado actual: ${exp.estado}).`)
+  if (!exp.historial.some((h) => h.tipo === 'actividad'))
+    return error('Para cerrar, el expediente debe tener al menos una actividad registrada.')
+  if (estaVacio(motivo))
+    return error('Ingrese el motivo de cierre (no puede estar vacío ni tener solo espacios).')
+
+  const fecha = new Date().toISOString()
+  const m = motivo.trim()
+  const actualizado: Expediente = {
+    ...exp,
+    estado: 'Cerrado',
+    cierres: [...exp.cierres, { fecha, motivo: m }], // se agrega, nunca se reemplaza
+    historial: [
+      ...exp.historial,
+      { ...entradaEstado('En seguimiento', 'Cerrado', `Cierre: En seguimiento → Cerrado. Motivo: ${m}`, m), fecha },
+    ],
+  }
+  return guardarYResponder(actualizado, 'Expediente cerrado correctamente.')
 }
 
-export function cerrarExpediente(
-  id: string,
-  motivo: string,
-  fecha: string,
-): Expediente {
-  return actualizarPorId(id, (expediente) => {
-    if (expediente.estado === 'Cerrado') {
-      throw new Error('El expediente ya está cerrado.')
-    }
-    if (obtenerActividades(expediente).length === 0) {
-      throw new Error('Registra al menos una actividad antes de cerrar el expediente.')
-    }
-    const motivoLimpio = motivo.trim()
-    if (!motivoLimpio) {
-      throw new Error('Debes ingresar un motivo de cierre.')
-    }
-    return {
-      ...expediente,
-      estado: 'Cerrado',
-      motivoCierre: motivoLimpio,
-      fechaCierre: fecha,
-      historial: [
-        ...expediente.historial,
-        {
-          id: crypto.randomUUID(),
-          tipo: 'estado',
-          fecha,
-          detalle: `Expediente cerrado. Motivo: ${motivoLimpio}`,
-        },
-      ],
-    }
-  })
+export function reabrirExpediente(id: string, motivo: string): Resultado {
+  const exp = obtenerExpediente(id)
+  if (!exp) return error('El expediente no existe.')
+  if (exp.estado !== 'Cerrado')
+    return error(`No se puede reabrir: el expediente está "${exp.estado}". Solo se reabren expedientes cerrados.`)
+  if (estaVacio(motivo))
+    return error('Ingrese el motivo de reapertura (no puede estar vacío ni tener solo espacios).')
+
+  const m = motivo.trim()
+  const actualizado: Expediente = {
+    ...exp,
+    estado: 'En seguimiento', // ID, datos, actividades y cierres se conservan
+    historial: [
+      ...exp.historial,
+      entradaEstado('Cerrado', 'En seguimiento', `Reapertura: Cerrado → En seguimiento. Motivo: ${m}`, m),
+    ],
+  }
+  return guardarYResponder(actualizado, 'Expediente reabierto. Ya admite nuevas actividades.')
 }
