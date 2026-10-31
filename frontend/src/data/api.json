@@ -1,0 +1,96 @@
+{
+  "expedientes": [
+    {
+      "id": "EXP-0001",
+      "alias": "María Sol",
+      "descripcion": "Consulta ficticia sobre un contrato de arrendamiento.",
+      "responsable": "Lic. Andrea López",
+      "categoria": "Civil",
+      "fechaApertura": "2026-10-10T09:00:00.000Z",
+      "estado": "En seguimiento",
+      "historial": [
+        {
+          "id": "exp-0001-apertura",
+          "tipo": "apertura",
+          "fecha": "2026-10-10T09:00:00.000Z",
+          "detalle": "Expediente abierto"
+        },
+        {
+          "id": "exp-0001-actividad-1",
+          "tipo": "actividad",
+          "fecha": "2026-10-12T15:30:00.000Z",
+          "detalle": "Revisión inicial de los documentos del caso.",
+          "tipoActividad": "Revisión"
+        },
+        {
+          "id": "exp-0001-estado-1",
+          "tipo": "estado",
+          "fecha": "2026-10-13T10:15:00.000Z",
+          "detalle": "Estado cambiado: Abierto → En seguimiento"
+        }
+      ]
+    },
+    {
+      "id": "EXP-0002",
+      "alias": "Daniela Río",
+      "descripcion": "Orientación ficticia para un acuerdo de convivencia familiar.",
+      "responsable": "Lic. Mateo Cruz",
+      "categoria": "Familiar",
+      "fechaApertura": "2026-10-20T14:00:00.000Z",
+      "estado": "Abierto",
+      "historial": [
+        {
+          "id": "exp-0002-apertura",
+          "tipo": "apertura",
+          "fecha": "2026-10-20T14:00:00.000Z",
+          "detalle": "Expediente abierto"
+        }
+      ]
+    },
+    {
+      "id": "EXP-0003",
+      "alias": "Alex del Valle",
+      "descripcion": "Consulta ficticia sobre el pago de prestaciones laborales.",
+      "responsable": "Lic. Sofía Méndez",
+      "categoria": "Laboral",
+      "fechaApertura": "2026-09-02T08:30:00.000Z",
+      "estado": "Cerrado",
+      "motivoCierre": "El caso se resolvió mediante un acuerdo entre las partes.",
+      "fechaCierre": "2026-09-18T16:45:00.000Z",
+      "historial": [
+        {
+          "id": "exp-0003-apertura",
+          "tipo": "apertura",
+          "fecha": "2026-09-02T08:30:00.000Z",
+          "detalle": "Expediente abierto"
+        },
+        {
+          "id": "exp-0003-actividad-1",
+          "tipo": "actividad",
+          "fecha": "2026-09-05T11:00:00.000Z",
+          "detalle": "Se revisó la documentación laboral presentada.",
+          "tipoActividad": "Revisión"
+        },
+        {
+          "id": "exp-0003-estado-1",
+          "tipo": "estado",
+          "fecha": "2026-09-08T09:20:00.000Z",
+          "detalle": "Estado cambiado: Abierto → En seguimiento"
+        },
+        {
+          "id": "exp-0003-actividad-2",
+          "tipo": "actividad",
+          "fecha": "2026-09-18T16:30:00.000Z",
+          "detalle": "Se documentó el acuerdo final.",
+          "tipoActividad": "Acuerdo"
+        },
+        {
+          "id": "exp-0003-cierre",
+          "tipo": "estado",
+          "fecha": "2026-09-18T16:45:00.000Z",
+          "detalle": "Expediente cerrado. Motivo: El caso se resolvió mediante un acuerdo entre las partes."
+        }
+      ]
+    }
+  ]
+}

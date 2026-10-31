@@ -1,4 +1,5 @@
 import { FolderOpen, MessageSquare, ArrowRightLeft } from "lucide-react";
+import { formatearFecha } from "../lib/storage";
 import type { Expediente } from "../types/expediente";
 
 type Evento = {
@@ -9,33 +10,16 @@ type Evento = {
   detalle?: string;
 };
 
-export const formatearFecha = (f: string) =>
-  new Date(f).toLocaleString("es-GT", { dateStyle: "medium", timeStyle: "short" });
-
 function construirHistorial(e: Expediente): Evento[] {
-  const eventos: Evento[] = [
-    {
-      id: "apertura",
-      tipo: "apertura",
-      fecha: e.fechaApertura,
-      texto: "Expediente abierto",
-    },
-    ...e.actividades.map((a) => ({
-      id: a.id,
-      tipo: "actividad" as const,
-      fecha: a.fecha,
-      texto: a.descripcion,
-      detalle: a.tipo,
-    })),
-    ...e.cambiosEstado.map((c) => ({
-      id: c.id,
-      tipo: "estado" as const,
-      fecha: c.fecha,
-      texto: `Cambio de estado: ${c.de} → ${c.a}`,
-      detalle: c.a === "Cerrado" ? e.motivoCierre : undefined,
-    })),
-  ];
-  return eventos.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+  return e.historial
+    .map((entrada) => ({
+      id: entrada.id,
+      tipo: entrada.tipo,
+      fecha: entrada.fecha,
+      texto: entrada.detalle,
+      detalle: entrada.tipoActividad,
+    }))
+    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 }
 
 const estilos = {
