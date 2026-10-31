@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { obtenerExpediente } from "../lib/storage";
 import EstadoBadge from "../components/EstadoBadge";
-import Historial, { formatearFecha } from "../components/Historial";
+import Historial, { formatearFecha, obtenerCierres } from "../components/Historial";
 
 export default function DetalleExpediente() {
   const { id } = useParams();
@@ -25,6 +25,7 @@ export default function DetalleExpediente() {
       <dd>{valor || "—"}</dd>
     </div>
   );
+     const cierres = obtenerCierres(expediente);
 
   return (
     <div className="mx-auto max-w-3xl p-4">
@@ -43,12 +44,21 @@ export default function DetalleExpediente() {
         {dato("Categoría", expediente.categoria)}
         {dato("Fecha de apertura", formatearFecha(expediente.fechaApertura))}
         <div className="sm:col-span-2">{dato("Descripción", expediente.descripcion)}</div>
-        {expediente.estado === "Cerrado" && (
-          <>
-            {dato("Fecha de cierre", expediente.fechaCierre ? formatearFecha(expediente.fechaCierre) : undefined)}
-            {dato("Motivo de cierre", expediente.motivoCierre)}
-          </>
-        )}
+        {cierres.length > 0 && (
+  <>
+    <h2 className="mb-3 text-lg font-semibold">Cierres ({cierres.length})</h2>
+    <ul className="mb-6 space-y-2">
+      {cierres.map((c, i) => (
+        <li key={i} className="rounded border border-gray-200 p-3">
+          <p className="text-xs text-gray-500">
+            Cierre {i + 1} · {formatearFecha(c.fecha)}
+          </p>
+          <p>{c.motivo || "—"}</p>
+        </li>
+      ))}
+    </ul>
+  </>
+)}
       </dl>
 
       {/* Integrante 3: agregar aquí los botones de cambio de estado y el formulario de actividad */}
