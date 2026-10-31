@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/* Mazo de juez: se levanta y golpea */
+@keyframes golpe-mazo {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  20%           { transform: rotate(-40deg); }
+  32%           { transform: rotate(12deg); }
+  40%           { transform: rotate(0deg); }
+}
+
+/* Onda del golpe sobre la base */
+@keyframes onda-golpe {
+  0%, 30%  { transform: scale(0.4); opacity: 0; }
+  34%      { transform: scale(0.6); opacity: 0.9; }
+  60%      { transform: scale(1.6); opacity: 0; }
+  100%     { opacity: 0; }
+}
+
+.mazo {
+  transform-origin: 20% 80%;
+  animation: golpe-mazo 2s ease-in-out infinite;
+}
+
+.onda {
+  animation: onda-golpe 2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mazo, .onda { animation: none; }
+}
